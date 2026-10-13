@@ -1,82 +1,116 @@
 #!/bin/bash
 
-echo "Introduce los números separados por espacios:"
-read -a numeros
+clear
 
-while true
-do
-    echo ""
-    echo "-------- MENU --------"
-    echo "1. Listado de los elementos"
-    echo "2. El número mayor"
-    echo "3. La posición del mayor"
-    echo "4. Ordenar de menor a mayor"
-    echo "5. Ordenar de mayor a menor"
-    echo "6. Salir"
-    echo "----------------------"
+#Me van a pasar argumentos y los voy a guardar en un array
+declare -a numeros
+numeros=($@)
 
-    read -p "Elige una opción: " opcion
+if [ $# -eq 0 ]; then
+    echo "Tienes que pasar numeros como argumentos"
+    exit 1
+fi
 
-    case $opcion in
+mayor=${numeros[0]}
+posicionmayor=0
+posicion=0
 
-        1)
-            echo "Elementos del array:"
-            echo "${numeros[@]}"
-            ;;
+#Mostramos al usuario un menu
+echo "-------------------------"
+echo "1.-Listado de elementos"
+echo "2.-El numero mayor"
+echo "3.-Posicion del mayor"
+echo "4.-Orden menor a mayor"
+echo "5.-Orden mayor a menor"
+echo "-------------------------"
 
-        2)
-            mayor=${numeros[0]}
+read -p "Dame una opcion dada (1 al 5): " opcion
 
-            for numero in "${numeros[@]}"
-            do
-                if [ "$numero" -gt "$mayor" ]; then
-                    mayor=$numero
+if [ "$opcion" -eq 1 ]; then
+
+    #Recorro todos los numeros del array y los muestro
+    for num in ${numeros[@]}; do
+        echo $num
+    done
+
+elif [ "$opcion" -eq 2 ]; then
+
+    #Busco el numero mayor
+    for num in ${numeros[@]}; do
+        if [ "$num" -gt "$mayor" ]; then
+            mayor=$num
+        fi
+    done
+
+    echo "El mayor es $mayor"
+
+elif [ "$opcion" -eq 3 ]; then
+
+    #Sacar la posicion del numero mayor en el array
+    for num in ${numeros[@]}; do
+        if [ "$num" -gt "$mayor" ]; then
+            mayor=$num
+            posicionmayor=$posicion
+        fi
+        posicion=$(($posicion+1))
+    done
+
+    echo "La posicion del numero mayor es $posicionmayor"
+
+elif [ "$opcion" -eq 4 ]; then
+
+    #Sacar el array de menor a mayor
+    veces=0
+    total=${#numeros[@]}
+
+    while [ "$veces" -ne $(($total*$total)) ]; do
+        posicion=1
+
+        for num in "${numeros[@]}"; do
+            if [ "$posicion" -lt "$total" ]; then
+                if [ "${numeros[$((posicion-1))]}" -gt "${numeros[$posicion]}" ]; then
+                    temporal=${numeros[$((posicion-1))]}
+                    numeros[$((posicion-1))]=${numeros[$posicion]}
+                    numeros[$posicion]=$temporal
                 fi
-            done
+            fi
 
-            echo "El número mayor es: $mayor"
-            ;;
+            posicion=$(($posicion+1))
+        done
 
-        3)
-            mayor=${numeros[0]}
+        veces=$(($veces+1))
+    done
 
-            for numero in "${numeros[@]}"
-            do
-                if [ "$numero" -gt "$mayor" ]; then
-                    mayor=$numero
+    echo "Array ordenado de menor a mayor:"
+    echo "${numeros[@]}"
+
+elif [ "$opcion" -eq 5 ]; then
+
+    #Sacar el array de mayor a menor
+    veces=0
+    total=${#numeros[@]}
+
+    while [ "$veces" -ne $(($total*$total)) ]; do
+        posicion=1
+
+        for num in "${numeros[@]}"; do
+            if [ "$posicion" -lt "$total" ]; then
+                if [ "${numeros[$((posicion-1))]}" -lt "${numeros[$posicion]}" ]; then
+                    temporal=${numeros[$((posicion-1))]}
+                    numeros[$((posicion-1))]=${numeros[$posicion]}
+                    numeros[$posicion]=$temporal
                 fi
-            done
+            fi
 
-            for i in "${!numeros[@]}"
-            do
-                if [ "${numeros[$i]}" -eq "$mayor" ]; then
-                    echo "El mayor está en la posición: $i"
-                fi
-            done
-            ;;
+            posicion=$(($posicion+1))
+        done
 
-        4)
-            ordenados=($(printf "%s\n" "${numeros[@]}" | sort -n))
+        veces=$(($veces+1))
+    done
 
-            echo "Array ordenado de menor a mayor:"
-            echo "${ordenados[@]}"
-            ;;
+    echo "Array ordenado de mayor a menor:"
+    echo "${numeros[@]}"
 
-        5)
-            ordenados=($(printf "%s\n" "${numeros[@]}" | sort -nr))
-
-            echo "Array ordenado de mayor a menor:"
-            echo "${ordenados[@]}"
-            ;;
-
-        6)
-            echo "Programa terminado"
-            break
-            ;;
-
-        *)
-            echo "Opción incorrecta"
-            ;;
-
-    esac
-done
+else
+    echo "Error, tienes que elegir una de las opciones mostradas"
+fi
