@@ -1,14 +1,15 @@
 #!/bin/bash
 
-# Comprobar que hay un solo argumento
+clear
+
+#Comprobar que me pasan un argumento
 if [ $# -ne 1 ]; then
-    echo "Uso: ./script5.sh fichero"
+    echo "Tienes que pasar un fichero"
     exit 1
 fi
 
-# Funcion para comprobar si existe el fichero
-comprobar_fichero()
-{
+#Funcion para comprobar si existe el fichero
+comprobar_fichero() {
     if [ -f "$1" ]; then
         return 1
     else
@@ -18,7 +19,6 @@ comprobar_fichero()
 
 fichero=$1
 
-# Comprobar si existe
 comprobar_fichero "$fichero"
 
 if [ $? -eq 0 ]; then
@@ -26,94 +26,90 @@ if [ $? -eq 0 ]; then
     exit 1
 fi
 
-# Crear el array asociativo
-declare -A archivo
+#Guardar los datos en un array asociativo
+declare -A datos
 
-archivo[nombre]="$(basename "$fichero")"
-archivo[ruta]="$(dirname "$(realpath "$fichero")")"
-archivo[tamano]="$(stat -c "%s" "$fichero")"
+datos[nombre]=$(basename "$fichero")
+datos[ruta]=$(dirname "$(realpath "$fichero")")
+datos[tamano]=$(stat -c "%s" "$fichero")
 
-# Nombre real del fichero
-nombre_real="${archivo[nombre]}"
+nombreoriginal=${datos[nombre]}
+opcion=0
 
-while true
-do
-    echo ""
-    echo "---------- MENU ----------"
-    echo "1. Ver nombre del fichero"
-    echo "2. Ver ruta del fichero"
-    echo "3. Ver tamaño del fichero"
-    echo "4. Ver contenido del fichero"
-    echo "5. Cambiar nombre del fichero"
-    echo "6. Guardar los cambios"
-    echo "7. Salir sin realizar cambios"
-    echo "8. Salir y guardar cambios"
-    echo "--------------------------"
+#Mostramos el menu
+while [ $opcion -ne 7 ] && [ $opcion -ne 8 ]; do
 
-    read -p "Elige una opcion: " opcion
+    echo "-------------------------"
+    echo "1.-Ver nombre del fichero"
+    echo "2.-Ver ruta del fichero"
+    echo "3.-Ver tamaño del fichero"
+    echo "4.-Ver contenido del fichero"
+    echo "5.-Cambiar nombre del fichero"
+    echo "6.-Guardar los cambios"
+    echo "7.-Salir sin realizar cambios"
+    echo "8.-Salir y guardar cambios"
+    echo "-------------------------"
 
-    case $opcion in
+    read -p "Dame una opcion (1...8): " opcion
 
-        1)
-            echo "Nombre: ${archivo[nombre]}"
-            ;;
+    if [ "$opcion" -eq 1 ]; then
 
-        2)
-            echo "Ruta: ${archivo[ruta]}"
-            ;;
+        echo "Nombre: ${datos[nombre]}"
 
-        3)
-            echo "Tamaño: ${archivo[tamano]} bytes"
-            ;;
+    elif [ "$opcion" -eq 2 ]; then
 
-        4)
-            echo "Contenido del fichero:"
-            cat "${archivo[ruta]}/$nombre_real"
-            ;;
+        echo "Ruta: ${datos[ruta]}"
 
-        5)
-            read -p "Introduce el nuevo nombre: " nuevo_nombre
+    elif [ "$opcion" -eq 3 ]; then
 
-            archivo[nombre]="$nuevo_nombre"
+        echo "Tamaño: ${datos[tamano]} bytes"
 
-            echo "Nombre cambiado en el array"
-            ;;
+    elif [ "$opcion" -eq 4 ]; then
 
-        6)
-            if [ "${archivo[nombre]}" != "$nombre_real" ]; then
+        cat "${datos[ruta]}/$nombreoriginal"
 
-                mv "${archivo[ruta]}/$nombre_real" "${archivo[ruta]}/${archivo[nombre]}"
+    elif [ "$opcion" -eq 5 ]; then
 
-                nombre_real="${archivo[nombre]}"
+        read -p "Introduce el nuevo nombre: " nuevo
+        datos[nombre]=$nuevo
+        echo "Nombre cambiado en el array"
 
-                echo "Cambios guardados"
+    elif [ "$opcion" -eq 6 ]; then
 
+        if [ "${datos[nombre]}" != "$nombreoriginal" ]; then
+            if [ -e "${datos[ruta]}/${datos[nombre]}" ]; then
+                echo "Ya existe un fichero con ese nombre"
             else
-                echo "No hay cambios"
+                mv "${datos[ruta]}/$nombreoriginal" "${datos[ruta]}/${datos[nombre]}"
+                nombreoriginal=${datos[nombre]}
+                echo "Cambios guardados"
             fi
-            ;;
+        else
+            echo "No hay cambios"
+        fi
 
-        7)
-            echo "Saliendo sin guardar cambios"
-            exit 0
-            ;;
+    elif [ "$opcion" -eq 7 ]; then
 
-        8)
-            if [ "${archivo[nombre]}" != "$nombre_real" ]; then
+        echo "Saliendo sin guardar cambios"
 
-                mv "${archivo[ruta]}/$nombre_real" "${archivo[ruta]}/${archivo[nombre]}"
+    elif [ "$opcion" -eq 8 ]; then
 
-                nombre_real="${archivo[nombre]}"
+        if [ "${datos[nombre]}" != "$nombreoriginal" ]; then
+            if [ -e "${datos[ruta]}/${datos[nombre]}" ]; then
+                echo "Ya existe un fichero con ese nombre"
+                opcion=0
+            else
+                mv "${datos[ruta]}/$nombreoriginal" "${datos[ruta]}/${datos[nombre]}"
+                echo "Cambios guardados"
             fi
+        fi
 
-            echo "Cambios guardados"
-            echo "Saliendo del programa"
-            exit 0
-            ;;
+        echo "Saliendo del programa"
 
-        *)
-            echo "Opcion incorrecta"
-            ;;
+    else
 
-    esac
+        echo "Opcion incorrecta"
+
+    fi
+
 done
